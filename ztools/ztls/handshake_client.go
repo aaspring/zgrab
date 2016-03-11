@@ -724,6 +724,9 @@ func (hs *clientHandshakeState) sendFinished() error {
 	finished := new(finishedMsg)
 	finished.verifyData = hs.finishedHash.clientSum(hs.masterSecret)
 	hs.finishedHash.Write(finished.marshal())
+
+	c.handshakeLog.ClientFinished = finished.MakeLog()
+
 	c.writeRecord(recordTypeHandshake, finished.marshal())
 	return nil
 }

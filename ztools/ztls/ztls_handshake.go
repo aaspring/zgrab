@@ -106,6 +106,7 @@ type ServerHandshake struct {
 	ServerFinished     *Finished          `json:"server_finished,omitempty"`
 	SessionTicket      *SessionTicket     `json:"session_ticket,omitempty"`
 	KeyMaterial        *KeyMaterial       `json:"key_material,omitempty"`
+	ClientFinished     *Finished          `json:"client_finished,omitempty"`
 }
 
 // MarshalJSON implements the json.Marshler interface
