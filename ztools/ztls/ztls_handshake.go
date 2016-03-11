@@ -80,11 +80,13 @@ type SessionTicket struct {
 }
 
 type MasterSecret struct {
-	Value []byte `json:"value,omitempty"`
+	Value  []byte `json:"value,omitempty"`
+	Length int    `json:"length,omitempty"`
 }
 
 type PreMasterSecret struct {
-	Value []byte `json:"value,omitempty"`
+	Value  []byte `json:"value,omitempty"`
+	Length int    `json:"length,omitempty"`
 }
 
 // KeyMaterial explicitly represent the cryptographic values negotiated by
@@ -299,12 +301,14 @@ func (m *ClientSessionState) MakeLog() *SessionTicket {
 
 func (m *clientHandshakeState) MakeLog() *KeyMaterial {
 	keymat := new(KeyMaterial)
-	keymat.MasterSecret = new(MasterSecret)
-	keymat.PreMasterSecret = new(PreMasterSecret)
 
+	keymat.MasterSecret = new(MasterSecret)
+	keymat.MasterSecret.Length = len(m.masterSecret)
 	keymat.MasterSecret.Value = make([]byte, len(m.masterSecret))
 	copy(keymat.MasterSecret.Value, m.masterSecret)
 
+	keymat.PreMasterSecret = new(PreMasterSecret)
+	keymat.PreMasterSecret.Length = len(m.preMasterSecret)
 	keymat.PreMasterSecret.Value = make([]byte, len(m.preMasterSecret))
 	copy(keymat.PreMasterSecret.Value, m.preMasterSecret)
 

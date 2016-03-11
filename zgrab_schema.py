@@ -208,10 +208,12 @@ zgrab_tls = SubRecord({
     }),
     "key_material":SubRecord({
         "pre_master_secret":SubRecord({
-            "value":Binary()
+            "value":Binary(),
+            "length":Integer()
         }),
         "master_secret":SubRecord({
             "value":Binary()
+            "length":Integer()
         }),
     }),
 })
