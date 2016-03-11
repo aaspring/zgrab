@@ -66,12 +66,17 @@ type ServerKeyExchange struct {
 	SignatureError string             `json:"signature_error,omitempty"`
 }
 
+type RSAClientParams struct {
+	Length       uint16 `json:"length,omitempty"`
+	EncryptedPMS []byte `json:"encrypted_pre_master_secret,omitempty"`
+}
+
 // ClientKeyExchange represents the raw key data sent by the client in TLS key exchange message
 type ClientKeyExchange struct {
-	Raw        []byte             `json:"-"`
-	RSAParams  *keys.RSAPublicKey `json:"rsa_params,omitempty"`
-	DHParams   *keys.DHParams     `json:"dh_params,omitempty"`
-	ECDHParams *keys.ECDHParams   `json:"ecdh_params,omitempty"`
+	Raw        []byte           `json:"-"`
+	RSAParams  *RSAClientParams `json:"rsa_params,omitempty"`
+	DHParams   *keys.DHParams   `json:"dh_params,omitempty"`
+	ECDHParams *keys.ECDHParams `json:"ecdh_params,omitempty"`
 }
 
 // Finished represents a TLS Finished message
@@ -333,7 +338,10 @@ func (m *clientKeyExchangeMsg) MakeLog(ka keyAgreement) *ClientKeyExchange {
 	// Write out parameters
 	switch ka := ka.(type) {
 	case *rsaKeyAgreement:
-		ckx.RSAParams = ka.RSAParams()
+		ckx.RSAParams = new(RSAClientParams)
+		ckx.RSAParams.EncryptedPMS = make([]byte, len(m.ciphertext)-2)
+		copy(ckx.RSAParams.EncryptedPMS, m.ciphertext[2:])
+		ckx.RSAParams.Length = uint16(len(m.ciphertext) - 2)
 	case *dheKeyAgreement:
 		ckx.DHParams = ka.DHParams()
 	case *ecdheKeyAgreement:
