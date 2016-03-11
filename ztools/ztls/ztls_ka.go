@@ -64,6 +64,26 @@ func (ka *ecdheKeyAgreement) ECDHParams() *keys.ECDHParams {
 	return out
 }
 
+func (ka *ecdheKeyAgreement) PrivateECDHParams() *keys.ECDHParams {
+	out := new(keys.ECDHParams)
+	out.TLSCurveID = keys.TLSCurveID(ka.curveID)
+	out.ClientPublic = &keys.ECPoint{}
+	if ka.x != nil {
+		out.ClientPublic.X = new(big.Int)
+		out.ClientPublic.X.Set(ka.clientX)
+	}
+	if ka.y != nil {
+		out.ClientPublic.Y = new(big.Int)
+		out.ClientPublic.Y.Set(ka.clientY)
+	}
+
+	out.ClientSecret = new(keys.KEXParamsClientSecret)
+	out.ClientSecret.Length = len(ka.clientPrivKey)
+	out.ClientSecret.Value = make([]byte, len(ka.clientPrivKey))
+	copy(out.ClientSecret.Value, ka.clientPrivKey)
+	return out
+}
+
 func (ka *dheKeyAgreement) DHParams() *keys.DHParams {
 	out := new(keys.DHParams)
 	if ka.p != nil {

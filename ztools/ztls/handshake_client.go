@@ -502,6 +502,9 @@ func (hs *clientHandshakeState) doFullHandshake() error {
 	}
 
 	preMasterSecret, ckx, err := keyAgreement.generateClientKeyExchange(c.config, hs.hello, serverCert)
+
+	c.handshakeLog.ClientKeyExchange = ckx.MakeLog(keyAgreement)
+
 	if err != nil {
 		c.sendAlert(alertInternalError)
 		return err

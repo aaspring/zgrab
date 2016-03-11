@@ -66,6 +66,14 @@ type ServerKeyExchange struct {
 	SignatureError string             `json:"signature_error,omitempty"`
 }
 
+// ClientKeyExchange represents the raw key data sent by the client in TLS key exchange message
+type ClientKeyExchange struct {
+	Raw        []byte             `json:"-"`
+	RSAParams  *keys.RSAPublicKey `json:"rsa_params,omitempty"`
+	DHParams   *keys.DHParams     `json:"dh_params,omitempty"`
+	ECDHParams *keys.ECDHParams   `json:"ecdh_params,omitempty"`
+}
+
 // Finished represents a TLS Finished message
 type Finished struct {
 	VerifyData []byte `json:"verify_data"`
@@ -107,6 +115,7 @@ type ServerHandshake struct {
 	SessionTicket      *SessionTicket     `json:"session_ticket,omitempty"`
 	KeyMaterial        *KeyMaterial       `json:"key_material,omitempty"`
 	ClientFinished     *Finished          `json:"client_finished,omitempty"`
+	ClientKeyExchange  *ClientKeyExchange `json:"client_key_exchange,omitempty"`
 }
 
 // MarshalJSON implements the json.Marshler interface
@@ -314,4 +323,24 @@ func (m *clientHandshakeState) MakeLog() *KeyMaterial {
 	copy(keymat.PreMasterSecret.Value, m.preMasterSecret)
 
 	return keymat
+}
+
+func (m *clientKeyExchangeMsg) MakeLog(ka keyAgreement) *ClientKeyExchange {
+	ckx := new(ClientKeyExchange)
+	ckx.Raw = make([]byte, len(m.raw))
+	copy(ckx.Raw, m.raw)
+
+	// Write out parameters
+	switch ka := ka.(type) {
+	case *rsaKeyAgreement:
+		ckx.RSAParams = ka.RSAParams()
+	case *dheKeyAgreement:
+		ckx.DHParams = ka.DHParams()
+	case *ecdheKeyAgreement:
+		ckx.ECDHParams = ka.PrivateECDHParams()
+	default:
+		break
+	}
+
+	return ckx
 }

@@ -24,12 +24,19 @@ import (
 // http://www.iana.org/assignments/tls-parameters/tls-parameters.xml#tls-parameters-8
 type TLSCurveID uint16
 
+type KEXParamsClientSecret struct {
+	Value  []byte `json:"value,omitempty"`
+	Length int    `json:"length, omitempth"`
+}
+
 // ECDHParams stores elliptic-curve Diffie-Hellman paramters.At any point in
 // time, it is unlikely that both ServerPrivate and ClientPrivate will be non-nil.
 type ECDHParams struct {
-	TLSCurveID   TLSCurveID     `json:"curve_id,omitempty"`
-	Curve        elliptic.Curve `json:"-"`
-	ServerPublic *ECPoint       `json:"server_public,omitempty"`
+	TLSCurveID   TLSCurveID             `json:"curve_id,omitempty"`
+	Curve        elliptic.Curve         `json:"-"`
+	ServerPublic *ECPoint               `json:"server_public,omitempty"`
+	ClientPublic *ECPoint               `json:"client_public,omitempty"`
+	ClientSecret *KEXParamsClientSecret `json:"client_secret,omitempty"`
 }
 
 // ECPoint represents an elliptic curve point and serializes nicely to JSON

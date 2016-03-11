@@ -496,6 +496,7 @@ func (c *Conn) TLSHandshake() error {
 		hl.KeyMaterial = nil
 		hl.ClientHello = nil
 		hl.ClientFinished = nil
+		hl.ClientKeyExchange = nil
 	}
 
 	c.grabData.TLSHandshake = hl
