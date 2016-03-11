@@ -26,7 +26,7 @@ type TLSCurveID uint16
 
 type ECDHPrivateParams struct {
 	Value  []byte `json:"value,omitempty"`
-	Length int    `json:"length, omitempth"`
+	Length int    `json:"length,omitempty"`
 }
 
 // ECDHParams stores elliptic-curve Diffie-Hellman paramters.At any point in

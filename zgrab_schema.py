@@ -212,7 +212,7 @@ zgrab_tls = SubRecord({
             "length":Integer()
         }),
         "master_secret":SubRecord({
-            "value":Binary()
+            "value":Binary(),
             "length":Integer()
         }),
     }),
@@ -260,7 +260,7 @@ zgrab_tls = SubRecord({
         }),
         "rsa_params":SubRecord({
             "length":Integer(),
-            "encrypted_pre_master_secret":Binar()
+            "encrypted_pre_master_secret":Binary()
         }),
     }),
 })

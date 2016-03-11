@@ -64,7 +64,7 @@ func (ka *ecdheKeyAgreement) ECDHParams() *keys.ECDHParams {
 	return out
 }
 
-func (ka *ecdheKeyAgreement) PrivateECDHParams() *keys.ECDHParams {
+func (ka *ecdheKeyAgreement) ClientECDHParams() *keys.ECDHParams {
 	out := new(keys.ECDHParams)
 	out.TLSCurveID = keys.TLSCurveID(ka.curveID)
 	out.ClientPublic = &keys.ECPoint{}
