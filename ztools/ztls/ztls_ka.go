@@ -77,10 +77,10 @@ func (ka *ecdheKeyAgreement) PrivateECDHParams() *keys.ECDHParams {
 		out.ClientPublic.Y.Set(ka.clientY)
 	}
 
-	out.ClientSecret = new(keys.KEXParamsClientSecret)
-	out.ClientSecret.Length = len(ka.clientPrivKey)
-	out.ClientSecret.Value = make([]byte, len(ka.clientPrivKey))
-	copy(out.ClientSecret.Value, ka.clientPrivKey)
+	out.ClientPrivate = new(keys.ECDHPrivateParams)
+	out.ClientPrivate.Length = len(ka.clientPrivKey)
+	out.ClientPrivate.Value = make([]byte, len(ka.clientPrivKey))
+	copy(out.ClientPrivate.Value, ka.clientPrivKey)
 	return out
 }
 
@@ -113,7 +113,6 @@ func (ka *dheKeyAgreement) ClientDHParams() *keys.DHParams {
 		out.ClientPrivate = new(big.Int).Set(ka.xOurs)
 	}
 	return out
-	// asdfasdfasdf
 }
 
 // DigitalSignature represents a signature for a digitally-signed-struct in the
