@@ -720,6 +720,7 @@ func (ka *dheKeyAgreement) generateClientKeyExchange(config *Config, clientHello
 
 	yOurs := new(big.Int).Exp(ka.g, xOurs, ka.p)
 	ka.yOurs = yOurs
+	ka.xOurs = xOurs
 	ka.yClient = new(big.Int).Set(yOurs)
 	yBytes := yOurs.Bytes()
 	ckx := new(clientKeyExchangeMsg)

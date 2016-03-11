@@ -335,15 +335,15 @@ func (m *clientKeyExchangeMsg) MakeLog(ka keyAgreement) *ClientKeyExchange {
 	ckx.Raw = make([]byte, len(m.raw))
 	copy(ckx.Raw, m.raw)
 
-	// Write out parameters
 	switch ka := ka.(type) {
 	case *rsaKeyAgreement:
 		ckx.RSAParams = new(RSAClientParams)
+		ckx.RSAParams.Length = uint16(len(m.ciphertext) - 2) // First 2 bytes are length
 		ckx.RSAParams.EncryptedPMS = make([]byte, len(m.ciphertext)-2)
 		copy(ckx.RSAParams.EncryptedPMS, m.ciphertext[2:])
-		ckx.RSAParams.Length = uint16(len(m.ciphertext) - 2)
+		// Premaster-Secret is available in KeyMaterial record
 	case *dheKeyAgreement:
-		ckx.DHParams = ka.DHParams()
+		ckx.DHParams = ka.ClientDHParams()
 	case *ecdheKeyAgreement:
 		ckx.ECDHParams = ka.PrivateECDHParams()
 	default:

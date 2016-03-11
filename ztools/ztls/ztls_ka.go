@@ -98,6 +98,24 @@ func (ka *dheKeyAgreement) DHParams() *keys.DHParams {
 	return out
 }
 
+func (ka *dheKeyAgreement) ClientDHParams() *keys.DHParams {
+	out := new(keys.DHParams)
+	if ka.p != nil {
+		out.Prime = new(big.Int).Set(ka.p)
+	}
+	if ka.g != nil {
+		out.Generator = new(big.Int).Set(ka.g)
+	}
+	if ka.yClient != nil {
+		out.ClientPublic = new(big.Int).Set(ka.yClient)
+	}
+	if ka.xOurs != nil {
+		out.ClientPrivate = new(big.Int).Set(ka.xOurs)
+	}
+	return out
+	// asdfasdfasdf
+}
+
 // DigitalSignature represents a signature for a digitally-signed-struct in the
 // TLS record protocol. It is dependent on the version of TLS in use. In TLS
 // 1.2, the first two bytes of the signature specify the signature and hash
