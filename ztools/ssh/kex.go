@@ -10,10 +10,12 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/subtle"
+	"encoding/json"
 	"errors"
 	"io"
 	"math/big"
 
+	ztoolsKeys "github.com/zmap/zgrab/ztools/keys"
 	"golang.org/x/crypto/curve25519"
 )
 
@@ -73,11 +75,27 @@ type kexAlgorithm interface {
 	// Client runs the client-side key agreement. Caller is
 	// responsible for verifying the host key signature.
 	Client(p packetConn, rand io.Reader, magics *handshakeMagics) (*kexResult, error)
+
+	// Create a JSON object for the kexAlgorithm group
+	MarshalJSON() ([]byte, error)
 }
 
 // dhGroup is a multiplicative group suitable for implementing Diffie-Hellman key agreement.
 type dhGroup struct {
 	g, p, pMinus1 *big.Int
+	clientPrivate *big.Int
+	clientPublic  *big.Int
+	serverPublic  *big.Int
+}
+
+func (group *dhGroup) MarshalJSON() ([]byte, error) {
+	var temp ztoolsKeys.DHParams
+	temp.Generator = group.g
+	temp.Prime = group.p
+	temp.ClientPublic = group.clientPublic
+	temp.ClientPrivate = group.clientPrivate
+	temp.ServerPublic = group.serverPublic
+	return temp.MarshalJSON()
 }
 
 func (group *dhGroup) diffieHellman(theirPublic, myPrivate *big.Int) (*big.Int, error) {
@@ -100,8 +118,10 @@ func (group *dhGroup) Client(c packetConn, randSource io.Reader, magics *handsha
 			break
 		}
 	}
+	group.clientPrivate = x
 
 	X := new(big.Int).Exp(group.g, x, group.p)
+	group.clientPublic = X
 	kexDHInit := kexDHInitMsg{
 		X: X,
 	}
@@ -118,6 +138,8 @@ func (group *dhGroup) Client(c packetConn, randSource io.Reader, magics *handsha
 	if err = Unmarshal(packet, &kexDHReply); err != nil {
 		return nil, err
 	}
+
+	group.serverPublic = kexDHReply.Y
 
 	kInt, err := group.diffieHellman(kexDHReply.Y, x)
 	if err != nil {
@@ -211,6 +233,10 @@ func (group *dhGroup) Server(c packetConn, randSource io.Reader, magics *handsha
 // described in RFC 5656, section 4.
 type ecdh struct {
 	curve elliptic.Curve
+}
+
+func (kex *ecdh) MarshalJSON() ([]byte, error) {
+	return json.Marshal(kex.curve)
 }
 
 func (kex *ecdh) Client(c packetConn, rand io.Reader, magics *handshakeMagics) (*kexResult, error) {
@@ -383,8 +409,8 @@ func init() {
 	// 4253 and Oakley Group 2 in RFC 2409.
 	p, _ := new(big.Int).SetString("FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE65381FFFFFFFFFFFFFFFF", 16)
 	kexAlgoMap[kexAlgoDH1SHA1] = &dhGroup{
-		g: new(big.Int).SetInt64(2),
-		p: p,
+		g:       new(big.Int).SetInt64(2),
+		p:       p,
 		pMinus1: new(big.Int).Sub(p, bigOne),
 	}
 
@@ -393,8 +419,8 @@ func init() {
 	p, _ = new(big.Int).SetString("FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3BE39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA051015728E5A8AACAA68FFFFFFFFFFFFFFFF", 16)
 
 	kexAlgoMap[kexAlgoDH14SHA1] = &dhGroup{
-		g: new(big.Int).SetInt64(2),
-		p: p,
+		g:       new(big.Int).SetInt64(2),
+		p:       p,
 		pMinus1: new(big.Int).Sub(p, bigOne),
 	}
 
@@ -408,6 +434,16 @@ func init() {
 // agreement protocol, as described in
 // https://git.libssh.org/projects/libssh.git/tree/doc/curve25519-sha256@libssh.org.txt
 type curve25519sha256 struct{}
+
+type curve25519sha256Marshal struct {
+	Name string `json:"name"`
+}
+
+func (kex *curve25519sha256) MarshalJSON() ([]byte, error) {
+	var temp curve25519sha256Marshal
+	temp.Name = "curve25519sha256"
+	return json.Marshal(temp)
+}
 
 type curve25519KeyPair struct {
 	priv [32]byte

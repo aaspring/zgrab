@@ -71,8 +71,10 @@ type handshakeTransport struct {
 	// The session ID or nil if first kex did not complete yet.
 	sessionID []byte
 
-	serverKex *kexInitMsg
-	clientKex *kexInitMsg
+	serverKex        *kexInitMsg
+	clientKex        *kexInitMsg
+	agreedAlgorithms *algorithms
+	keyExchangeGroup kexAlgorithm
 }
 
 func newHandshakeTransport(conn keyingTransport, config *Config, clientVersion, serverVersion []byte) *handshakeTransport {
@@ -376,6 +378,8 @@ func (t *handshakeTransport) enterKeyExchangeLocked(otherInitPacket []byte) erro
 		return err
 	}
 
+	t.agreedAlgorithms = algs
+
 	// We don't send FirstKexFollows, but we handle receiving it.
 	//
 	// RFC 4253 section 7 defines the kex and the agreement method for
@@ -398,6 +402,8 @@ func (t *handshakeTransport) enterKeyExchangeLocked(otherInitPacket []byte) erro
 	if !ok {
 		return fmt.Errorf("ssh: unexpected key exchange algorithm %v", algs.kex)
 	}
+
+	t.keyExchangeGroup = kex
 
 	var result *kexResult
 	if len(t.hostKeys) > 0 {

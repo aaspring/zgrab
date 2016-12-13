@@ -18,7 +18,7 @@ package ssh
 // SSH handshake, and can be encoded to JSON.
 type HandshakeLogX struct {
 	ServerIDString string             `json:"server_id_string,omitempty"`
-	ServerKex      KeyExchange        `json:"server_key_exchange,omitempty"`
+	ServerKex      KeyExchangeMsg     `json:"server_key_exchange_msg,omitempty"`
 	UserAuth       UserAuthentication `json:"userauth,omitempty"`
 	CryptoResult   CryptoResult       `json:"crypto_result,omitempty"`
 
@@ -39,10 +39,25 @@ type UserAuthentication struct {
 }
 
 type CryptoResult struct {
-	SessionID []byte `json:"session_id,omitempty"`
+	AgreedAlgorithms AgreedAlgorithms `json:"agreed_algorithms"`
+	SessionID        []byte           `json:"session_id,omitempty"`
+	KeyExchange      kexAlgorithm     `json:"key_exchange"`
 }
 
-type KeyExchange struct {
+type AlgorithmGroup struct {
+	Cipher      string `json:"cipher"`
+	MAC         string `json:"mac"`
+	Compression string `json:"compression"`
+}
+
+type AgreedAlgorithms struct {
+	Kex               string         `json:"key_exchange"`
+	HostKey           string         `json:"host_key"`
+	ClientToServerAlg AlgorithmGroup `json:"client_to_server_algorithm_group"`
+	ServerToClientAlg AlgorithmGroup `json:"server_to_client_algorithm_group"`
+}
+
+type KeyExchangeMsg struct {
 	HostKeyAlgorithms       []string `json:"host_key_algorithms"`
 	Cookie                  []byte   `json:"cookie"`
 	KexAlgorithms           []string `json:"kex_algorithms"`
