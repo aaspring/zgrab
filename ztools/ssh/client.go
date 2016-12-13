@@ -23,11 +23,12 @@ type Client struct {
 }
 
 func (client *Client) MakeHandshakeLog(hsLog *HandshakeLogX) {
+	fmt.Printf("TRANSPORT: %+v\n", client.Transport())
 	// Fill in banner data
 	hsLog.ServerIDString = string(client.Conn.ServerVersion())
 
 	// Fill in Server Kex data
-	hsLog.ServerKex.HostKeyAlgorithms = client.Transport().hostKeyAlgorithms
+	hsLog.ServerKex.HostKeyAlgorithms = client.Transport().serverKex.ServerHostKeyAlgos
 
 	// Fill in crypto data
 	hsLog.CryptoResult.SessionID = client.Conn.SessionID()

@@ -70,6 +70,9 @@ type handshakeTransport struct {
 
 	// The session ID or nil if first kex did not complete yet.
 	sessionID []byte
+
+	serverKex *kexInitMsg
+	clientKex *kexInitMsg
 }
 
 func newHandshakeTransport(conn keyingTransport, config *Config, clientVersion, serverVersion []byte) *handshakeTransport {
@@ -364,6 +367,9 @@ func (t *handshakeTransport) enterKeyExchangeLocked(otherInitPacket []byte) erro
 		magics.clientKexInit = myInitPacket
 		magics.serverKexInit = otherInitPacket
 	}
+
+	t.serverKex = serverInit
+	t.clientKex = clientInit
 
 	algs, err := findAgreedAlgorithms(clientInit, serverInit)
 	if err != nil {
