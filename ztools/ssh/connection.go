@@ -45,6 +45,9 @@ type ConnMetadata interface {
 	// UserAuthMethodNames returns the auth methods advertised by the server in
 	// response to a "none" Authentication request
 	UserAuthMethodNames() []string
+
+	// Transport contains the server KEX information for the connection
+	Transport() *handshakeTransport
 }
 
 // Conn represents an SSH connection for both server and client roles.
@@ -99,6 +102,10 @@ type connection struct {
 
 func (c *connection) Close() error {
 	return c.sshConn.conn.Close()
+}
+
+func (c *connection) Transport() *handshakeTransport {
+	return c.transport
 }
 
 // sshconn provides net.Conn metadata, but disallows direct reads and

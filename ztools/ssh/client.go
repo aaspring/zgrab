@@ -29,6 +29,9 @@ func (client *Client) MakeHandshakeLog(hsLog *HandshakeLog) {
 	hsLog.ServerProtocol = new(ProtocolAgreement)
 	hsLog.ServerProtocol.RawBanner = string(client.Conn.ServerVersion())
 
+	// Fill in Server Kex data
+	hsLog.ServerKex.HostKeyAlgorithms = client.Transport().hostKeyAlgorithms
+
 	// Fill in crypto data
 	hsLog.Crypto.SessionID = client.Conn.SessionID()
 

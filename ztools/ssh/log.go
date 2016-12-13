@@ -30,9 +30,9 @@ type HandshakeLog struct {
 		DHInit                *KeyExchangeDHInit            `json:"key_exchange_dh_init,omitempty"`
 		DHReply               *KeyExchangeDHInitReply       `json:"key_exchange_dh_reply,omitempty"`
 	*/
-	ServerKeyExchangeInit KeyExchange        `json:"server_key_exchange_init,omitempty"`
-	UserAuth              UserAuthentication `json:"userauth,omitempty"`
-	Crypto                Crypto             `json:"crypto,omitempty"`
+	ServerKex KeyExchange        `json:"server_key_exchange_init,omitempty"`
+	UserAuth  UserAuthentication `json:"userauth,omitempty"`
+	Crypto    Crypto             `json:"crypto,omitempty"`
 }
 
 type UserAuthentication struct {
@@ -60,10 +60,10 @@ type ProtocolAgreement struct {
 }
 
 type KeyExchange struct {
+	HostKeyAlgorithms []string `json:"host_key_algorithms"`
 	/*
 		Cookie                    Cookie   `json:"cookie"`
 		KexAlgorithms             NameList `json:"key_exchange_algorithms"`
-		HostKeyAlgorithms         NameList `json:"host_key_algorithms"`
 		EncryptionClientToServer  NameList `json:"encryption_client_to_server"`
 		EncryptionServerToClient  NameList `json:"encryption_server_to_client"`
 		MACClientToServer         NameList `json:"mac_client_to_server"`
