@@ -220,7 +220,7 @@ func makeSSHGrabber(config *Config, grabData GrabData) func(string) error {
 			return err
 		}
 
-		sshClient.MakeHandshakeLog(grabData.SSH)
+		sshClient.MakeHandshakeLog(grabData.SSH_X)
 
 		return nil
 	}
@@ -575,7 +575,7 @@ func GrabBanner(config *Config, target *GrabTarget) *Grab {
 	if config.SSH.SSH {
 		t := time.Now()
 
-		grabData := GrabData{SSH: new(ssh.HandshakeLog)}
+		grabData := GrabData{SSH_X: new(ssh.HandshakeLogX)}
 		sshGrabber := makeSSHGrabber(config, grabData)
 
 		port := strconv.FormatUint(uint64(config.Port), 10)

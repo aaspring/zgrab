@@ -22,18 +22,15 @@ type Client struct {
 	channelHandlers map[string]chan NewChannel
 }
 
-func (client *Client) MakeHandshakeLog(hsLog *HandshakeLog) {
+func (client *Client) MakeHandshakeLog(hsLog *HandshakeLogX) {
 	// Fill in banner data
-	hsLog.ClientProtocol = new(ProtocolAgreement)
-	hsLog.ClientProtocol.RawBanner = string(client.Conn.ClientVersion())
-	hsLog.ServerProtocol = new(ProtocolAgreement)
-	hsLog.ServerProtocol.RawBanner = string(client.Conn.ServerVersion())
+	hsLog.ServerIDString = string(client.Conn.ServerVersion())
 
 	// Fill in Server Kex data
 	hsLog.ServerKex.HostKeyAlgorithms = client.Transport().hostKeyAlgorithms
 
 	// Fill in crypto data
-	hsLog.Crypto.SessionID = client.Conn.SessionID()
+	hsLog.CryptoResult.SessionID = client.Conn.SessionID()
 
 	// Fill in userauth data
 	hsLog.UserAuth.MethodNames = client.Conn.UserAuthMethodNames()

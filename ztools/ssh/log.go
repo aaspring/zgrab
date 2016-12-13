@@ -16,9 +16,11 @@ package ssh
 
 // HandshakeLog contains detailed information about each step of the
 // SSH handshake, and can be encoded to JSON.
-type HandshakeLog struct {
-	ClientProtocol *ProtocolAgreement `json:"client_protocol,omitempty"`
-	ServerProtocol *ProtocolAgreement `json:"server_protocol,omitempty"`
+type HandshakeLogX struct {
+	ServerIDString string             `json:"server_id_string,omitempty"`
+	ServerKex      KeyExchange        `json:"server_key_exchange_init,omitempty"`
+	UserAuth       UserAuthentication `json:"userauth,omitempty"`
+	CryptoResult   CryptoResult       `json:"crypto_result,omitempty"`
 
 	/*
 		ClientKexExchangeInit *KeyExchangeInit              `json:"client_key_exchange_init,omitempty"`
@@ -30,33 +32,14 @@ type HandshakeLog struct {
 		DHInit                *KeyExchangeDHInit            `json:"key_exchange_dh_init,omitempty"`
 		DHReply               *KeyExchangeDHInitReply       `json:"key_exchange_dh_reply,omitempty"`
 	*/
-	ServerKex KeyExchange        `json:"server_key_exchange_init,omitempty"`
-	UserAuth  UserAuthentication `json:"userauth,omitempty"`
-	Crypto    Crypto             `json:"crypto,omitempty"`
 }
 
 type UserAuthentication struct {
 	MethodNames []string `json:"method_names,omitempty"`
 }
 
-type Crypto struct {
+type CryptoResult struct {
 	SessionID []byte `json:"session_id,omitempty"`
-}
-
-// ProtocolAgreement represents the client and server protocol banners
-//
-// RFC specifies the format for the banner as specified in RFC 4523 Section 4.2
-//       SSH-protoversion-softwareversion SP comments CR LF
-//
-// The server MAY send other lines of data before sending the version.
-// The lines are terminated by CR LF, and SHOULD be encoded as UTF-8
-//
-// See http://tools.ietf.org/html/rfc4253 for details
-type ProtocolAgreement struct {
-	RawBanner string `json:"raw_banner,omitempty"`
-	//ProtocolVersion string `json:"protocol_version,omitempty"`
-	//SoftwareVersion string `json:"software_version,omitempty"`
-	//Comments        string `json:"comments,omitempty"`
 }
 
 type KeyExchange struct {
