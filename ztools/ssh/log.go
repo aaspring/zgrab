@@ -18,7 +18,7 @@ package ssh
 // SSH handshake, and can be encoded to JSON.
 type HandshakeLogX struct {
 	ServerIDString string             `json:"server_id_string,omitempty"`
-	ServerKex      KeyExchange        `json:"server_key_exchange_init,omitempty"`
+	ServerKex      KeyExchange        `json:"server_key_exchange,omitempty"`
 	UserAuth       UserAuthentication `json:"userauth,omitempty"`
 	CryptoResult   CryptoResult       `json:"crypto_result,omitempty"`
 
@@ -43,26 +43,15 @@ type CryptoResult struct {
 }
 
 type KeyExchange struct {
-	HostKeyAlgorithms []string `json:"host_key_algorithms"`
-	/*
-		Cookie                    Cookie   `json:"cookie"`
-		KexAlgorithms             NameList `json:"key_exchange_algorithms"`
-		EncryptionClientToServer  NameList `json:"encryption_client_to_server"`
-		EncryptionServerToClient  NameList `json:"encryption_server_to_client"`
-		MACClientToServer         NameList `json:"mac_client_to_server"`
-		MACServerToClient         NameList `json:"mac_server_to_client"`
-		CompressionClientToServer NameList `json:"compression_client_to_server"`
-		CompressionServerToClient NameList `json:"compression_server_to_client"`
-		LanguageClientToServer    NameList `json:"language_client_to_server"`
-		LanguageServerToClient    NameList `json:"language_server_to_client"`
-		FirstKexPacketFollows     bool     `json:"first_kex_packet_follows"`
-		Zero                      uint32   `json:"zero"`
-	*/
+	HostKeyAlgorithms       []string `json:"host_key_algorithms"`
+	Cookie                  []byte   `json:"cookie"`
+	KexAlgorithms           []string `json:"kex_algorithms"`
+	CiphersClientServer     []string `json:"client_to_server_ciphers"`
+	CiphersServerClient     []string `json:"server_to_client_ciphers"`
+	MACsClientServer        []string `json:"client_to_server_macs"`
+	MACsServerClient        []string `json:"server_to_client_macs"`
+	CompressionClientServer []string `json:"client_to_server_compression"`
+	CompressionServerClient []string `json:"server_to_client_compression"`
+	LanguagesClientServer   []string `json:"client_to_server_languages"`
+	LanguagesServerClient   []string `json:"server_to_client_languages"`
 }
-
-/*
-type AlgorithmSelection struct {
-	KexAlgorithm     string `json:"key_exchange_algorithm,omitempty"`
-	HostKeyAlgorithm string `json:"host_key_algorithm,omitempty"`
-}
-*/
