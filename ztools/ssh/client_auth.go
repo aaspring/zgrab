@@ -39,6 +39,12 @@ func (c *connection) clientAuthenticate(config *ClientConfig) error {
 			// success
 			return nil
 		}
+
+		c.userAuthMethodNames = methods
+		if config.DontAuthenticate {
+			return nil
+		}
+
 		tried[auth.method()] = true
 		if methods == nil {
 			methods = lastMethods

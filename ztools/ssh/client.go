@@ -94,8 +94,9 @@ func (c *connection) clientHandshake(dialAddress string, config *ClientConfig) e
 		return err
 	}
 
+	intermediateTransport := newTransport(c.sshConn.conn, config.Rand, true /* is client */)
 	c.transport = newClientTransport(
-		newTransport(c.sshConn.conn, config.Rand, true /* is client */),
+		intermediateTransport,
 		c.clientVersion, c.serverVersion, config, dialAddress, c.sshConn.RemoteAddr())
 	if err := c.transport.requestInitialKeyChange(); err != nil {
 		return err
@@ -210,4 +211,8 @@ type ClientConfig struct {
 	//
 	// A Timeout of zero means no timeout.
 	Timeout time.Duration
+
+	// If true, send the "none" Authentication Request to collect the advertised
+	// userauth method names, but do not attempt to authenticate.
+	DontAuthenticate bool
 }

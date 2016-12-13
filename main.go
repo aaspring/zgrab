@@ -15,7 +15,7 @@
 package main
 
 import (
-	"encoding/hex"
+	//"encoding/hex"
 	"encoding/json"
 	"flag"
 	"io"
@@ -120,12 +120,15 @@ func init() {
 	flag.BoolVar(&config.FTP, "ftp", false, "Read FTP banners")
 	flag.BoolVar(&config.FTPAuthTLS, "ftp-authtls", false, "Collect FTPS certificates in addition to FTP banners")
 	flag.BoolVar(&config.DNP3, "dnp3", false, "Read DNP3 banners")
+
+	// SSH Command-line flags
 	flag.BoolVar(&config.SSH.SSH, "ssh", false, "SSH scan")
-	flag.StringVar(&config.SSH.Client, "ssh-client", "", "Mimic behavior of a specific SSH client")
-	flag.StringVar(&config.SSH.KexAlgorithms, "ssh-kex-algorithms", "", "Set SSH Key Exchange Algorithms")
-	flag.StringVar(&config.SSH.HostKeyAlgorithms, "ssh-host-key-algorithms", "", "Set SSH Host Key Algorithms")
-	flag.StringVar(&config.SSH.FixedKexValue, "ssh-kex-value", "", "Set SSH DH kex value in hexadecimal")
-	flag.BoolVar(&config.SSH.NegativeOne, "ssh-negative-one", false, "Set SSH DH kex value to -1 in the selected group")
+	//flag.StringVar(&config.SSH.Client, "ssh-client", "", "Mimic behavior of a specific SSH client")
+	//flag.StringVar(&config.SSH.KexAlgorithms, "ssh-kex-algorithms", "", "Set SSH Key Exchange Algorithms")
+	//flag.StringVar(&config.SSH.HostKeyAlgorithms, "ssh-host-key-algorithms", "", "Set SSH Host Key Algorithms")
+	//flag.StringVar(&config.SSH.FixedKexValue, "ssh-kex-value", "", "Set SSH DH kex value in hexadecimal")
+	//flag.BoolVar(&config.SSH.NegativeOne, "ssh-negative-one", false, "Set SSH DH kex value to -1 in the selected group")
+
 	flag.BoolVar(&config.Telnet, "telnet", false, "Read telnet banners")
 	flag.IntVar(&config.TelnetMaxSize, "telnet-max-size", 65536, "Max bytes to read for telnet banner")
 
@@ -143,22 +146,24 @@ func init() {
 
 	// Validate SSH related flags
 	if config.SSH.SSH {
-		if _, ok := config.SSH.GetClientImplementation(); !ok {
-			zlog.Fatalf("Unknown SSH client %s", config.SSH.Client)
-		}
-		if _, err := config.SSH.MakeKexNameList(); err != nil {
-			zlog.Fatalf("Bad SSH Key Exchange Algorithms: %s", err.Error())
-		}
-		if _, err := config.SSH.MakeHostKeyNameList(); err != nil {
-			zlog.Fatalf("Bad SSH Host Key Algorithms: %s", err.Error())
-		}
-		if len(config.SSH.FixedKexValue) > 0 {
-			b, err := hex.DecodeString(config.SSH.FixedKexValue)
-			if err != nil {
-				zlog.Fatalf("Bad SSH kex value (must be hex): %s", err.Error())
+		/*
+			if _, ok := config.SSH.GetClientImplementation(); !ok {
+				zlog.Fatalf("Unknown SSH client %s", config.SSH.Client)
 			}
-			config.SSH.FixedKexBytes = append([]byte{0x00}, b...)
-		}
+			if _, err := config.SSH.MakeKexNameList(); err != nil {
+				zlog.Fatalf("Bad SSH Key Exchange Algorithms: %s", err.Error())
+			}
+			if _, err := config.SSH.MakeHostKeyNameList(); err != nil {
+				zlog.Fatalf("Bad SSH Host Key Algorithms: %s", err.Error())
+			}
+			if len(config.SSH.FixedKexValue) > 0 {
+				b, err := hex.DecodeString(config.SSH.FixedKexValue)
+				if err != nil {
+					zlog.Fatalf("Bad SSH kex value (must be hex): %s", err.Error())
+				}
+				config.SSH.FixedKexBytes = append([]byte{0x00}, b...)
+			}
+		*/
 	}
 
 	// Validate HTTP

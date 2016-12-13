@@ -41,6 +41,10 @@ type ConnMetadata interface {
 
 	// LocalAddr returns the local address for this connection.
 	LocalAddr() net.Addr
+
+	// UserAuthMethodNames returns the auth methods advertised by the server in
+	// response to a "none" Authentication request
+	UserAuthMethodNames() []string
 }
 
 // Conn represents an SSH connection for both server and client roles.
@@ -102,10 +106,11 @@ func (c *connection) Close() error {
 type sshConn struct {
 	conn net.Conn
 
-	user          string
-	sessionID     []byte
-	clientVersion []byte
-	serverVersion []byte
+	user                string
+	sessionID           []byte
+	clientVersion       []byte
+	serverVersion       []byte
+	userAuthMethodNames []string
 }
 
 func dup(src []byte) []byte {
@@ -140,4 +145,8 @@ func (c *sshConn) ClientVersion() []byte {
 
 func (c *sshConn) ServerVersion() []byte {
 	return dup(c.serverVersion)
+}
+
+func (c *sshConn) UserAuthMethodNames() []string {
+	return c.userAuthMethodNames
 }

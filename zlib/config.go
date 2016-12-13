@@ -15,10 +15,10 @@
 package zlib
 
 import (
-	"encoding/csv"
-	"errors"
-	"io"
-	"strings"
+	//"encoding/csv"
+	//"errors"
+	//"io"
+	//"strings"
 	"time"
 
 	"github.com/zmap/zgrab/ztools/ssh"
@@ -36,15 +36,16 @@ type HTTPConfig struct {
 }
 
 type SSHScanConfig struct {
-	SSH               bool
-	Client            string
-	KexAlgorithms     string
-	HostKeyAlgorithms string
-	FixedKexValue     string
-	FixedKexBytes     []byte
-	NegativeOne       bool
+	SSH bool
+	//Client            string
+	//KexAlgorithms     string
+	//HostKeyAlgorithms string
+	//FixedKexValue     string
+	//FixedKexBytes     []byte
+	//NegativeOne       bool
 }
 
+/*
 func (sc *SSHScanConfig) GetClientImplementation() (*ssh.ClientImplementation, bool) {
 	if sc.Client == "" {
 		return &ssh.OpenSSH_6_6p1, true
@@ -82,13 +83,16 @@ func (sc *SSHScanConfig) MakeHostKeyNameList() (ssh.NameList, error) {
 	hostKeyReader := strings.NewReader(sc.HostKeyAlgorithms)
 	return sc.readNameList(hostKeyReader)
 }
+*/
 
-func (sc *SSHScanConfig) MakeConfig() *ssh.Config {
-	config := new(ssh.Config)
-	config.KexAlgorithms, _ = sc.MakeKexNameList()
-	config.HostKeyAlgorithms, _ = sc.MakeHostKeyNameList()
-	config.KexValue = sc.FixedKexBytes
-	config.NegativeOne = sc.NegativeOne
+func (sc *SSHScanConfig) MakeConfig() *ssh.ClientConfig {
+	config := new(ssh.ClientConfig)
+	/*
+		config.KexAlgorithms, _ = sc.MakeKexNameList()
+		config.HostKeyAlgorithms, _ = sc.MakeHostKeyNameList()
+		config.KexValue = sc.FixedKexBytes
+		config.NegativeOne = sc.NegativeOne
+	*/
 	return config
 }
 

@@ -34,6 +34,7 @@ import (
 	"github.com/zmap/zgrab/ztools/scada/dnp3"
 	"github.com/zmap/zgrab/ztools/scada/fox"
 	"github.com/zmap/zgrab/ztools/scada/siemens"
+	"github.com/zmap/zgrab/ztools/ssh"
 	"github.com/zmap/zgrab/ztools/telnet"
 	"github.com/zmap/zgrab/ztools/zlog"
 	"github.com/zmap/zgrab/ztools/ztls"
@@ -206,6 +207,23 @@ func usingDefaultPort(scheme string, port uint16) bool {
 // return true if the string includes a port, does not validate port
 func containsPort(host string) bool {
 	return strings.LastIndex(host, ":") > strings.LastIndex(host, "]")
+}
+
+func makeSSHGrabber(config *Config, grabData GrabData) func(string) error {
+	return func(netAddr string) error {
+
+		sshConfig := &ssh.ClientConfig{
+			DontAuthenticate: true, // IOT scan ethically, never attempt to authenticate
+		}
+		client, err := ssh.Dial("tcp", netAddr, sshConfig)
+		if err != nil {
+			return err
+		}
+
+		grabData.SSH.UserAuth.MethodNames = client.Conn.UserAuthMethodNames()
+
+		return nil
+	}
 }
 
 func makeHTTPGrabber(config *Config, grabData *GrabData) func(string, string, string) error {
@@ -462,12 +480,14 @@ func makeGrabber(config *Config) func(*Conn) error {
 			dnp3.GetDNP3Banner(c.grabData.DNP3, c.getUnderlyingConn())
 		}
 
-		if config.SSH.SSH {
-			if err := c.SSHHandshake(); err != nil {
-				c.erroredComponent = "ssh"
-				return err
+		/*
+			if config.SSH.SSH {
+				if err := c.SSHHandshake(); err != nil {
+					c.erroredComponent = "ssh"
+					return err
+				}
 			}
-		}
+		*/
 
 		if config.SendData {
 			host, _, _ := net.SplitHostPort(c.RemoteAddr().String())
@@ -552,7 +572,24 @@ func makeGrabber(config *Config) func(*Conn) error {
 
 func GrabBanner(config *Config, target *GrabTarget) *Grab {
 
-	if len(config.HTTP.Endpoint) == 0 {
+	if config.SSH.SSH {
+		t := time.Now()
+
+		grabData := GrabData{SSH: new(ssh.HandshakeLog)}
+		sshGrabber := makeSSHGrabber(config, grabData)
+
+		port := strconv.FormatUint(uint64(config.Port), 10)
+		rhost := net.JoinHostPort(target.Addr.String(), port)
+
+		err := sshGrabber(rhost)
+
+		return &Grab{
+			IP:    target.Addr,
+			Time:  t,
+			Data:  grabData,
+			Error: err,
+		}
+	} else if len(config.HTTP.Endpoint) == 0 {
 		dial := makeDialer(config)
 		grabber := makeGrabber(config)
 		port := strconv.FormatUint(uint64(config.Port), 10)

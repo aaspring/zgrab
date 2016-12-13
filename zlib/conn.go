@@ -30,7 +30,6 @@ import (
 
 	"github.com/zmap/zgrab/ztools/ftp"
 	"github.com/zmap/zgrab/ztools/scada/bacnet"
-	"github.com/zmap/zgrab/ztools/ssh"
 	"github.com/zmap/zgrab/ztools/util"
 	"github.com/zmap/zgrab/ztools/x509"
 	"github.com/zmap/zgrab/ztools/ztls"
@@ -571,11 +570,14 @@ func (c *Conn) GetFTPSCertificates() error {
 	}
 }
 
+/*
 func (c *Conn) SSHHandshake() error {
 	config := c.sshScan.MakeConfig()
-	client := ssh.Client(c.conn, config)
-	err := client.ClientHandshake()
-	handshakeLog := client.HandshakeLog()
-	c.grabData.SSH = handshakeLog
-	return err
+		client := ssh.Client(c.conn, config)
+		err := client.ClientHandshake()
+		handshakeLog := client.HandshakeLog()
+	c.grabData.SSH = new(ssh.HandshakeLog)
+		return err
+	return nil
 }
+*/
