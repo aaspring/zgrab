@@ -12,11 +12,11 @@
  * permissions and limitations under the License.
  */
 
-package ssh
+package xssh
 
 // HandshakeLog contains detailed information about each step of the
 // SSH handshake, and can be encoded to JSON.
-type HandshakeLogX struct {
+type HandshakeLog struct {
 	ServerIDString string             `json:"server_id_string,omitempty"`
 	ServerKex      KeyExchangeMsg     `json:"server_key_exchange_msg,omitempty"`
 	UserAuth       UserAuthentication `json:"userauth,omitempty"`

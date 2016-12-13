@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package ssh
+package xssh
 
 import (
 	"errors"
@@ -22,7 +22,7 @@ type Client struct {
 	channelHandlers map[string]chan NewChannel
 }
 
-func (client *Client) MakeHandshakeLog(hsLog *HandshakeLogX) {
+func (client *Client) MakeHandshakeLog(hsLog *HandshakeLog) {
 	// Fill in banner data
 	hsLog.ServerIDString = string(client.Conn.ServerVersion())
 
