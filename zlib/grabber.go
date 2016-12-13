@@ -215,12 +215,12 @@ func makeSSHGrabber(config *Config, grabData GrabData) func(string) error {
 		sshConfig := &ssh.ClientConfig{
 			DontAuthenticate: true, // IOT scan ethically, never attempt to authenticate
 		}
-		client, err := ssh.Dial("tcp", netAddr, sshConfig)
+		sshClient, err := ssh.Dial("tcp", netAddr, sshConfig)
 		if err != nil {
 			return err
 		}
 
-		grabData.SSH.UserAuth.MethodNames = client.Conn.UserAuthMethodNames()
+		sshClient.MakeHandshakeLog(grabData.SSH)
 
 		return nil
 	}
