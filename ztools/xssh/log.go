@@ -24,7 +24,7 @@ type HandshakeLog struct {
 	AlgorithmSelection  *AlgorithmSelection `json:"algorithm_selection,omitempty"`
 	ServerDHKeyExchange kexAlgorithm        `json:"dh_key_exchange"`
 	UserAuth            UserAuthentication  `json:"userauth,omitempty"`
-	CryptoResult        CryptoResult        `json:"crypto,omitempty"`
+	Crypto              Crypto              `json:"crypto,omitempty"`
 
 	/*
 		ClientKexExchangeInit *KeyExchangeInit              `json:"client_key_exchange_init,omitempty"`
@@ -49,8 +49,10 @@ type AlgorithmSelection struct {
 	ServerToClientAlg AlgorithmGroup `json:"server_to_client_algorithm_group"`
 }
 
-type CryptoResult struct {
+type Crypto struct {
 	SessionID []byte `json:"session_id,omitempty"`
+	H         []byte `json:"H"`
+	K         []byte `json:"K"`
 }
 
 type AlgorithmGroup struct {

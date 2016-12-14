@@ -55,7 +55,9 @@ func (client *Client) MakeHandshakeLog(hsLog *HandshakeLog) {
 	hsLog.ServerDHKeyExchange = client.Transport().keyExchangeGroup
 
 	// Fill in crypto data
-	hsLog.CryptoResult.SessionID = client.Conn.SessionID()
+	hsLog.Crypto.SessionID = client.Conn.SessionID()
+	hsLog.Crypto.H = client.Transport().H
+	hsLog.Crypto.K = client.Transport().K
 
 	// Fill in userauth data
 	hsLog.UserAuth.MethodNames = client.Conn.UserAuthMethodNames()

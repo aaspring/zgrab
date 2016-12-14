@@ -75,6 +75,8 @@ type handshakeTransport struct {
 	clientKex        *kexInitMsg
 	agreedAlgorithms *algorithms
 	keyExchangeGroup kexAlgorithm
+	H                []byte
+	K                []byte
 }
 
 func newHandshakeTransport(conn keyingTransport, config *Config, clientVersion, serverVersion []byte) *handshakeTransport {
@@ -411,6 +413,9 @@ func (t *handshakeTransport) enterKeyExchangeLocked(otherInitPacket []byte) erro
 	} else {
 		result, err = t.client(kex, algs, &magics)
 	}
+
+	t.H = result.H
+	t.K = result.K
 
 	if err != nil {
 		return err
