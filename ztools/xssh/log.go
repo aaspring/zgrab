@@ -17,10 +17,11 @@ package xssh
 // HandshakeLog contains detailed information about each step of the
 // SSH handshake, and can be encoded to JSON.
 type HandshakeLog struct {
-	ServerIDString string             `json:"server_id_string,omitempty"`
-	ServerKex      KeyExchangeMsg     `json:"server_key_exchange_msg,omitempty"`
-	UserAuth       UserAuthentication `json:"userauth,omitempty"`
-	CryptoResult   CryptoResult       `json:"crypto_result,omitempty"`
+	ServerIDString      string             `json:"server_id_string,omitempty"`
+	ServerKex           KeyExchangeMsg     `json:"server_key_exchange,omitempty"`
+	ServerDHKeyExchange kexAlgorithm       `json:"server_dh_key_exchange"`
+	UserAuth            UserAuthentication `json:"userauth,omitempty"`
+	CryptoResult        CryptoResult       `json:"crypto,omitempty"`
 
 	/*
 		ClientKexExchangeInit *KeyExchangeInit              `json:"client_key_exchange_init,omitempty"`
@@ -39,22 +40,17 @@ type UserAuthentication struct {
 }
 
 type CryptoResult struct {
-	AgreedAlgorithms AgreedAlgorithms `json:"agreed_algorithms"`
-	SessionID        []byte           `json:"session_id,omitempty"`
-	KeyExchange      kexAlgorithm     `json:"key_exchange"`
+	SessionID         []byte         `json:"session_id,omitempty"`
+	KexType           string         `json:"dh_key_exchange_type"`
+	HostKeyType       string         `json:"host_key_type"`
+	ClientToServerAlg AlgorithmGroup `json:"client_to_server_algorithm_group"`
+	ServerToClientAlg AlgorithmGroup `json:"server_to_client_algorithm_group"`
 }
 
 type AlgorithmGroup struct {
 	Cipher      string `json:"cipher"`
 	MAC         string `json:"mac"`
 	Compression string `json:"compression"`
-}
-
-type AgreedAlgorithms struct {
-	Kex               string         `json:"key_exchange"`
-	HostKey           string         `json:"host_key"`
-	ClientToServerAlg AlgorithmGroup `json:"client_to_server_algorithm_group"`
-	ServerToClientAlg AlgorithmGroup `json:"server_to_client_algorithm_group"`
 }
 
 type KeyExchangeMsg struct {
