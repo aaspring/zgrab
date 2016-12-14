@@ -83,19 +83,18 @@ type kexAlgorithm interface {
 // dhGroup is a multiplicative group suitable for implementing Diffie-Hellman key agreement.
 type dhGroup struct {
 	g, p, pMinus1 *big.Int
-	clientPrivate *big.Int
-	clientPublic  *big.Int
-	serverPublic  *big.Int
+	JsonLog       dhGroupJsonLog
+}
+type dhGroupJsonLog struct {
+	Parameters      *ztoolsKeys.DHParams `json:"parameters"`
+	ServerSignature []byte               `json:"server_signature"`
+	ServerHostKey   []byte               `json:"server_host_key"`
 }
 
 func (group *dhGroup) MarshalJSON() ([]byte, error) {
-	var temp ztoolsKeys.DHParams
-	temp.Generator = group.g
-	temp.Prime = group.p
-	temp.ClientPublic = group.clientPublic
-	temp.ClientPrivate = group.clientPrivate
-	temp.ServerPublic = group.serverPublic
-	return temp.MarshalJSON()
+	group.JsonLog.Parameters.Generator = group.g
+	group.JsonLog.Parameters.Prime = group.p
+	return json.Marshal(group.JsonLog)
 }
 
 func (group *dhGroup) diffieHellman(theirPublic, myPrivate *big.Int) (*big.Int, error) {
@@ -106,6 +105,7 @@ func (group *dhGroup) diffieHellman(theirPublic, myPrivate *big.Int) (*big.Int, 
 }
 
 func (group *dhGroup) Client(c packetConn, randSource io.Reader, magics *handshakeMagics) (*kexResult, error) {
+	group.JsonLog.Parameters = new(ztoolsKeys.DHParams)
 	hashFunc := crypto.SHA1
 
 	var x *big.Int
@@ -118,10 +118,10 @@ func (group *dhGroup) Client(c packetConn, randSource io.Reader, magics *handsha
 			break
 		}
 	}
-	group.clientPrivate = x
+	group.JsonLog.Parameters.ClientPrivate = x
 
 	X := new(big.Int).Exp(group.g, x, group.p)
-	group.clientPublic = X
+	group.JsonLog.Parameters.ClientPublic = X
 	kexDHInit := kexDHInitMsg{
 		X: X,
 	}
@@ -139,7 +139,9 @@ func (group *dhGroup) Client(c packetConn, randSource io.Reader, magics *handsha
 		return nil, err
 	}
 
-	group.serverPublic = kexDHReply.Y
+	group.JsonLog.Parameters.ServerPublic = kexDHReply.Y
+	group.JsonLog.ServerSignature = kexDHReply.Signature
+	group.JsonLog.ServerHostKey = kexDHReply.HostKey
 
 	kInt, err := group.diffieHellman(kexDHReply.Y, x)
 	if err != nil {
@@ -233,28 +235,34 @@ func (group *dhGroup) Server(c packetConn, randSource io.Reader, magics *handsha
 // described in RFC 5656, section 4.
 type ecdh struct {
 	curve   elliptic.Curve
-	storage *ztoolsKeys.ECDHParams
+	JsonLog ecdhJsonLog
+}
+
+type ecdhJsonLog struct {
+	Parameters      *ztoolsKeys.ECDHParams `json:"parameters"`
+	ServerSignature []byte                 `json:"server_signature"`
+	ServerHostKey   []byte                 `json:"server_host_key"`
 }
 
 func (kex *ecdh) MarshalJSON() ([]byte, error) {
-	return json.Marshal(kex.storage)
+	return json.Marshal(kex.JsonLog)
 }
 
 func (kex *ecdh) Client(c packetConn, rand io.Reader, magics *handshakeMagics) (*kexResult, error) {
-	kex.storage = new(ztoolsKeys.ECDHParams)
-	kex.storage.ServerPublic = new(ztoolsKeys.ECPoint)
-	kex.storage.ClientPublic = new(ztoolsKeys.ECPoint)
-	kex.storage.ClientPrivate = new(ztoolsKeys.ECDHPrivateParams)
+	kex.JsonLog.Parameters = new(ztoolsKeys.ECDHParams)
+	kex.JsonLog.Parameters.ServerPublic = new(ztoolsKeys.ECPoint)
+	kex.JsonLog.Parameters.ClientPublic = new(ztoolsKeys.ECPoint)
+	kex.JsonLog.Parameters.ClientPrivate = new(ztoolsKeys.ECDHPrivateParams)
 
 	ephKey, err := ecdsa.GenerateKey(kex.curve, rand)
 	if err != nil {
 		return nil, err
 	}
 
-	kex.storage.ClientPublic.X = ephKey.PublicKey.X
-	kex.storage.ClientPublic.Y = ephKey.PublicKey.Y
-	kex.storage.ClientPrivate.Value = ephKey.D.Bytes()
-	kex.storage.ClientPrivate.Length = ephKey.D.BitLen()
+	kex.JsonLog.Parameters.ClientPublic.X = ephKey.PublicKey.X
+	kex.JsonLog.Parameters.ClientPublic.Y = ephKey.PublicKey.Y
+	kex.JsonLog.Parameters.ClientPrivate.Value = ephKey.D.Bytes()
+	kex.JsonLog.Parameters.ClientPrivate.Length = ephKey.D.BitLen()
 
 	kexInit := kexECDHInitMsg{
 		ClientPubKey: elliptic.Marshal(kex.curve, ephKey.PublicKey.X, ephKey.PublicKey.Y),
@@ -276,8 +284,10 @@ func (kex *ecdh) Client(c packetConn, rand io.Reader, magics *handshakeMagics) (
 	}
 
 	x, y, err := unmarshalECKey(kex.curve, reply.EphemeralPubKey)
-	kex.storage.ServerPublic.X = x
-	kex.storage.ServerPublic.Y = y
+	kex.JsonLog.Parameters.ServerPublic.X = x
+	kex.JsonLog.Parameters.ServerPublic.Y = y
+	kex.JsonLog.ServerHostKey = reply.HostKey
+	kex.JsonLog.ServerSignature = reply.Signature
 	if err != nil {
 		return nil, err
 	}
