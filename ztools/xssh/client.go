@@ -27,6 +27,7 @@ func (client *Client) MakeHandshakeLog(hsLog *HandshakeLog) {
 	hsLog.ServerIDString = string(client.Conn.ServerVersion())
 
 	// Fill in Server Kex data
+	hsLog.ServerKex = new(KeyExchangeMsg)
 	hsLog.ServerKex.HostKeyAlgorithms = client.Transport().serverKex.ServerHostKeyAlgos
 	hsLog.ServerKex.Cookie = client.Transport().serverKex.Cookie[:]
 	hsLog.ServerKex.KexAlgorithms = client.Transport().serverKex.KexAlgos
@@ -39,17 +40,22 @@ func (client *Client) MakeHandshakeLog(hsLog *HandshakeLog) {
 	hsLog.ServerKex.LanguagesClientServer = client.Transport().serverKex.LanguagesClientServer
 	hsLog.ServerKex.LanguagesServerClient = client.Transport().serverKex.LanguagesServerClient
 
+	// Fill in Algorithm Selection data
+	hsLog.AlgorithmSelection = new(AlgorithmSelection)
+	hsLog.AlgorithmSelection.KexAlgorithm = client.Transport().agreedAlgorithms.kex
+	hsLog.AlgorithmSelection.HostKeyAlgorithm = client.Transport().agreedAlgorithms.hostKey
+	hsLog.AlgorithmSelection.ClientToServerAlg.Cipher = client.Transport().agreedAlgorithms.w.Cipher
+	hsLog.AlgorithmSelection.ClientToServerAlg.MAC = client.Transport().agreedAlgorithms.w.MAC
+	hsLog.AlgorithmSelection.ClientToServerAlg.Compression = client.Transport().agreedAlgorithms.w.Compression
+	hsLog.AlgorithmSelection.ServerToClientAlg.Cipher = client.Transport().agreedAlgorithms.r.Cipher
+	hsLog.AlgorithmSelection.ServerToClientAlg.MAC = client.Transport().agreedAlgorithms.r.MAC
+	hsLog.AlgorithmSelection.ServerToClientAlg.Compression = client.Transport().agreedAlgorithms.r.Compression
+
+	// Fill in DH key exchange data
+	hsLog.ServerDHKeyExchange = client.Transport().keyExchangeGroup
+
 	// Fill in crypto data
 	hsLog.CryptoResult.SessionID = client.Conn.SessionID()
-	hsLog.CryptoResult.KexType = client.Transport().agreedAlgorithms.kex
-	hsLog.CryptoResult.HostKeyType = client.Transport().agreedAlgorithms.hostKey
-	hsLog.CryptoResult.ClientToServerAlg.Cipher = client.Transport().agreedAlgorithms.w.Cipher
-	hsLog.CryptoResult.ClientToServerAlg.MAC = client.Transport().agreedAlgorithms.w.MAC
-	hsLog.CryptoResult.ClientToServerAlg.Compression = client.Transport().agreedAlgorithms.w.Compression
-	hsLog.CryptoResult.ServerToClientAlg.Cipher = client.Transport().agreedAlgorithms.r.Cipher
-	hsLog.CryptoResult.ServerToClientAlg.MAC = client.Transport().agreedAlgorithms.r.MAC
-	hsLog.CryptoResult.ServerToClientAlg.Compression = client.Transport().agreedAlgorithms.r.Compression
-	hsLog.ServerDHKeyExchange = client.Transport().keyExchangeGroup
 
 	// Fill in userauth data
 	hsLog.UserAuth.MethodNames = client.Conn.UserAuthMethodNames()
