@@ -27,7 +27,7 @@ func ExampleNewServerConn() {
 
 	authorizedKeysMap := map[string]bool{}
 	for len(authorizedKeysBytes) > 0 {
-		pubKey, _, _, rest, err := ssh.ParseAuthorizedKey(authorizedKeysBytes)
+		pubKey, _, _, rest, err := xssh.ParseAuthorizedKey(authorizedKeysBytes)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -38,9 +38,9 @@ func ExampleNewServerConn() {
 
 	// An SSH server is represented by a ServerConfig, which holds
 	// certificate details and handles authentication of ServerConns.
-	config := &ssh.ServerConfig{
+	config := &xssh.ServerConfig{
 		// Remove to disable password auth.
-		PasswordCallback: func(c ssh.ConnMetadata, pass []byte) (*ssh.Permissions, error) {
+		PasswordCallback: func(c xssh.ConnMetadata, pass []byte) (*xssh.Permissions, error) {
 			// Should use constant-time compare (or better, salt+hash) in
 			// a production setting.
 			if c.User() == "testuser" && string(pass) == "tiger" {
@@ -50,7 +50,7 @@ func ExampleNewServerConn() {
 		},
 
 		// Remove to disable public key auth.
-		PublicKeyCallback: func(c ssh.ConnMetadata, pubKey ssh.PublicKey) (*ssh.Permissions, error) {
+		PublicKeyCallback: func(c xssh.ConnMetadata, pubKey xssh.PublicKey) (*xssh.Permissions, error) {
 			if authorizedKeysMap[string(pubKey.Marshal())] {
 				return nil, nil
 			}
@@ -63,7 +63,7 @@ func ExampleNewServerConn() {
 		log.Fatal("Failed to load private key: ", err)
 	}
 
-	private, err := ssh.ParsePrivateKey(privateBytes)
+	private, err := xssh.ParsePrivateKey(privateBytes)
 	if err != nil {
 		log.Fatal("Failed to parse private key: ", err)
 	}
@@ -83,12 +83,12 @@ func ExampleNewServerConn() {
 
 	// Before use, a handshake must be performed on the incoming
 	// net.Conn.
-	_, chans, reqs, err := ssh.NewServerConn(nConn, config)
+	_, chans, reqs, err := xssh.NewServerConn(nConn, config)
 	if err != nil {
 		log.Fatal("failed to handshake: ", err)
 	}
 	// The incoming Request channel must be serviced.
-	go ssh.DiscardRequests(reqs)
+	go xssh.DiscardRequests(reqs)
 
 	// Service the incoming Channel channel.
 
@@ -99,7 +99,7 @@ func ExampleNewServerConn() {
 		// "session" and ServerShell may be used to present a simple
 		// terminal interface.
 		if newChannel.ChannelType() != "session" {
-			newChannel.Reject(ssh.UnknownChannelType, "unknown channel type")
+			newChannel.Reject(xssh.UnknownChannelType, "unknown channel type")
 			continue
 		}
 		channel, requests, err := newChannel.Accept()
@@ -110,7 +110,7 @@ func ExampleNewServerConn() {
 		// Sessions have out-of-band requests such as "shell",
 		// "pty-req" and "env".  Here we handle only the
 		// "shell" request.
-		go func(in <-chan *ssh.Request) {
+		go func(in <-chan *xssh.Request) {
 			for req := range in {
 				req.Reply(req.Type == "shell", nil)
 			}
@@ -136,13 +136,13 @@ func ExampleDial() {
 	//
 	// To authenticate with the remote server you must pass at least one
 	// implementation of AuthMethod via the Auth field in ClientConfig.
-	config := &ssh.ClientConfig{
+	config := &xssh.ClientConfig{
 		User: "username",
-		Auth: []ssh.AuthMethod{
-			ssh.Password("yourpassword"),
+		Auth: []xssh.AuthMethod{
+			xssh.Password("yourpassword"),
 		},
 	}
-	client, err := ssh.Dial("tcp", "yourserver.com:22", config)
+	client, err := xssh.Dial("tcp", "yourserver.com:22", config)
 	if err != nil {
 		log.Fatal("Failed to dial: ", err)
 	}
@@ -177,21 +177,21 @@ func ExamplePublicKeys() {
 	}
 
 	// Create the Signer for this private key.
-	signer, err := ssh.ParsePrivateKey(key)
+	signer, err := xssh.ParsePrivateKey(key)
 	if err != nil {
 		log.Fatalf("unable to parse private key: %v", err)
 	}
 
-	config := &ssh.ClientConfig{
+	config := &xssh.ClientConfig{
 		User: "user",
-		Auth: []ssh.AuthMethod{
+		Auth: []xssh.AuthMethod{
 			// Use the PublicKeys method for remote authentication.
-			ssh.PublicKeys(signer),
+			xssh.PublicKeys(signer),
 		},
 	}
 
 	// Connect to the remote server and perform the SSH handshake.
-	client, err := ssh.Dial("tcp", "host.com:22", config)
+	client, err := xssh.Dial("tcp", "host.com:22", config)
 	if err != nil {
 		log.Fatalf("unable to connect: %v", err)
 	}
@@ -199,14 +199,14 @@ func ExamplePublicKeys() {
 }
 
 func ExampleClient_Listen() {
-	config := &ssh.ClientConfig{
+	config := &xssh.ClientConfig{
 		User: "username",
-		Auth: []ssh.AuthMethod{
-			ssh.Password("password"),
+		Auth: []xssh.AuthMethod{
+			xssh.Password("password"),
 		},
 	}
-	// Dial your ssh server.
-	conn, err := ssh.Dial("tcp", "localhost:22", config)
+	// Dial your xssh server.
+	conn, err := xssh.Dial("tcp", "localhost:22", config)
 	if err != nil {
 		log.Fatal("unable to connect: ", err)
 	}
@@ -227,14 +227,14 @@ func ExampleClient_Listen() {
 
 func ExampleSession_RequestPty() {
 	// Create client config
-	config := &ssh.ClientConfig{
+	config := &xssh.ClientConfig{
 		User: "username",
-		Auth: []ssh.AuthMethod{
-			ssh.Password("password"),
+		Auth: []xssh.AuthMethod{
+			xssh.Password("password"),
 		},
 	}
-	// Connect to ssh server
-	conn, err := ssh.Dial("tcp", "localhost:22", config)
+	// Connect to xssh server
+	conn, err := xssh.Dial("tcp", "localhost:22", config)
 	if err != nil {
 		log.Fatal("unable to connect: ", err)
 	}
@@ -246,10 +246,10 @@ func ExampleSession_RequestPty() {
 	}
 	defer session.Close()
 	// Set up terminal modes
-	modes := ssh.TerminalModes{
-		ssh.ECHO:          0,     // disable echoing
-		ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
-		ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
+	modes := xssh.TerminalModes{
+		xssh.ECHO:          0,     // disable echoing
+		xssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
+		xssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
 	}
 	// Request pseudo terminal
 	if err := session.RequestPty("xterm", 40, 80, modes); err != nil {
