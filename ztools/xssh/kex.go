@@ -446,16 +446,29 @@ func init() {
 // curve25519sha256 implements the curve25519-sha256@libssh.org key
 // agreement protocol, as described in
 // https://git.libssh.org/projects/libssh.git/tree/doc/curve25519-sha256@libssh.org.txt
-type curve25519sha256 struct{}
-
-type curve25519sha256Marshal struct {
-	Name string `json:"name"`
+type curve25519sha256 struct {
+	clientPublic    []byte
+	clientPrivate   []byte
+	serverPublic    []byte
+	serverSignature []byte
+	serverHostKey   []byte
 }
 
 func (kex *curve25519sha256) MarshalJSON() ([]byte, error) {
-	var temp curve25519sha256Marshal
-	temp.Name = "curve25519sha256"
-	return json.Marshal(temp)
+	aux := struct {
+		ClientPublic    []byte `json:"client_public"`
+		ClientPrivate   []byte `json:"client_private"`
+		ServerPublic    []byte `json:"server_public"`
+		ServerSignature []byte `json:"server_signature"`
+		ServerHostKey   []byte `json:"server_host_key"`
+	}{
+		ClientPublic:    kex.clientPublic,
+		ClientPrivate:   kex.clientPrivate,
+		ServerPublic:    kex.serverPublic,
+		ServerSignature: kex.serverSignature,
+		ServerHostKey:   kex.serverHostKey,
+	}
+	return json.Marshal(aux)
 }
 
 type curve25519KeyPair struct {
@@ -481,6 +494,10 @@ func (kex *curve25519sha256) Client(c packetConn, rand io.Reader, magics *handsh
 	if err := kp.generate(rand); err != nil {
 		return nil, err
 	}
+
+	kex.clientPublic = kp.pub[:]
+	kex.clientPrivate = kp.priv[:]
+
 	if err := c.writePacket(Marshal(&kexECDHInitMsg{kp.pub[:]})); err != nil {
 		return nil, err
 	}
@@ -494,6 +511,10 @@ func (kex *curve25519sha256) Client(c packetConn, rand io.Reader, magics *handsh
 	if err = Unmarshal(packet, &reply); err != nil {
 		return nil, err
 	}
+
+	kex.serverPublic = reply.EphemeralPubKey
+	kex.serverHostKey = reply.HostKey
+	kex.serverSignature = reply.Signature
 	if len(reply.EphemeralPubKey) != 32 {
 		return nil, errors.New("ssh: peer's curve25519 public value has wrong length")
 	}
