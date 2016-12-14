@@ -232,18 +232,29 @@ func (group *dhGroup) Server(c packetConn, randSource io.Reader, magics *handsha
 // ecdh performs Elliptic Curve Diffie-Hellman key exchange as
 // described in RFC 5656, section 4.
 type ecdh struct {
-	curve elliptic.Curve
+	curve   elliptic.Curve
+	storage *ztoolsKeys.ECDHParams
 }
 
 func (kex *ecdh) MarshalJSON() ([]byte, error) {
-	return json.Marshal(kex.curve)
+	return json.Marshal(kex.storage)
 }
 
 func (kex *ecdh) Client(c packetConn, rand io.Reader, magics *handshakeMagics) (*kexResult, error) {
+	kex.storage = new(ztoolsKeys.ECDHParams)
+	kex.storage.ServerPublic = new(ztoolsKeys.ECPoint)
+	kex.storage.ClientPublic = new(ztoolsKeys.ECPoint)
+	kex.storage.ClientPrivate = new(ztoolsKeys.ECDHPrivateParams)
+
 	ephKey, err := ecdsa.GenerateKey(kex.curve, rand)
 	if err != nil {
 		return nil, err
 	}
+
+	kex.storage.ClientPublic.X = ephKey.PublicKey.X
+	kex.storage.ClientPublic.Y = ephKey.PublicKey.Y
+	kex.storage.ClientPrivate.Value = ephKey.D.Bytes()
+	kex.storage.ClientPrivate.Length = ephKey.D.BitLen()
 
 	kexInit := kexECDHInitMsg{
 		ClientPubKey: elliptic.Marshal(kex.curve, ephKey.PublicKey.X, ephKey.PublicKey.Y),
@@ -265,6 +276,8 @@ func (kex *ecdh) Client(c packetConn, rand io.Reader, magics *handshakeMagics) (
 	}
 
 	x, y, err := unmarshalECKey(kex.curve, reply.EphemeralPubKey)
+	kex.storage.ServerPublic.X = x
+	kex.storage.ServerPublic.Y = y
 	if err != nil {
 		return nil, err
 	}
@@ -424,9 +437,9 @@ func init() {
 		pMinus1: new(big.Int).Sub(p, bigOne),
 	}
 
-	kexAlgoMap[kexAlgoECDH521] = &ecdh{elliptic.P521()}
-	kexAlgoMap[kexAlgoECDH384] = &ecdh{elliptic.P384()}
-	kexAlgoMap[kexAlgoECDH256] = &ecdh{elliptic.P256()}
+	kexAlgoMap[kexAlgoECDH521] = &ecdh{curve: elliptic.P521()}
+	kexAlgoMap[kexAlgoECDH384] = &ecdh{curve: elliptic.P384()}
+	kexAlgoMap[kexAlgoECDH256] = &ecdh{curve: elliptic.P256()}
 	kexAlgoMap[kexAlgoCurve25519SHA256] = &curve25519sha256{}
 }
 
