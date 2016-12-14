@@ -554,9 +554,7 @@ func makeGrabber(config *Config) func(*Conn) error {
 func makeXSSHGrabber(config *Config, grabData GrabData) func(string) error {
 	return func(netAddr string) error {
 
-		xsshConfig := &xssh.ClientConfig{
-			DontAuthenticate: true, // IOT scan ethically, never attempt to authenticate
-		}
+		xsshConfig := xssh.MakeXSSHConfig()
 		xsshClient, err := xssh.Dial("tcp", netAddr, xsshConfig)
 		if err != nil {
 			return err
