@@ -70,13 +70,6 @@ type handshakeTransport struct {
 
 	// The session ID or nil if first kex did not complete yet.
 	sessionID []byte
-
-	serverKex        *kexInitMsg
-	clientKex        *kexInitMsg
-	agreedAlgorithms *algorithms
-	keyExchangeGroup kexAlgorithm
-	H                []byte
-	K                []byte
 }
 
 func newHandshakeTransport(conn keyingTransport, config *Config, clientVersion, serverVersion []byte) *handshakeTransport {
@@ -349,11 +342,13 @@ func (t *handshakeTransport) enterKeyExchangeLocked(otherInitPacket []byte) erro
 	if err != nil {
 		return err
 	}
+	t.config.ConnLog.ClientKex = myInit
 
 	otherInit := &kexInitMsg{}
 	if err := Unmarshal(otherInitPacket, otherInit); err != nil {
 		return err
 	}
+	t.config.ConnLog.ServerKex = otherInit
 
 	magics := handshakeMagics{
 		clientVersion: t.clientVersion,
@@ -372,15 +367,11 @@ func (t *handshakeTransport) enterKeyExchangeLocked(otherInitPacket []byte) erro
 		magics.serverKexInit = otherInitPacket
 	}
 
-	t.serverKex = serverInit
-	t.clientKex = clientInit
-
 	algs, err := findAgreedAlgorithms(clientInit, serverInit)
 	if err != nil {
 		return err
 	}
-
-	t.agreedAlgorithms = algs
+	t.config.ConnLog.AlgorithmSelection = algs
 
 	// We don't send FirstKexFollows, but we handle receiving it.
 	//
@@ -405,18 +396,15 @@ func (t *handshakeTransport) enterKeyExchangeLocked(otherInitPacket []byte) erro
 		return fmt.Errorf("ssh: unexpected key exchange algorithm %v", algs.kex)
 	}
 
-	t.keyExchangeGroup = kex
+	t.config.ConnLog.DHKeyExchange = kex
 
 	var result *kexResult
+	t.config.ConnLog.Crypto = result
 	if len(t.hostKeys) > 0 {
 		result, err = t.server(kex, algs, &magics)
 	} else {
 		result, err = t.client(kex, algs, &magics)
 	}
-
-	t.H = result.H
-	t.K = result.K
-
 	if err != nil {
 		return err
 	}

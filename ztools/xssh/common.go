@@ -7,6 +7,7 @@ package xssh
 import (
 	"crypto"
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
 	"io"
 	"sync"
@@ -99,9 +100,9 @@ func findCommon(what string, client []string, server []string) (common string, e
 }
 
 type directionAlgorithms struct {
-	Cipher      string
-	MAC         string
-	Compression string
+	Cipher      string `json:"cipher"`
+	MAC         string `json:"MAC"`
+	Compression string `json:"compression"`
 }
 
 type algorithms struct {
@@ -109,6 +110,22 @@ type algorithms struct {
 	hostKey string
 	w       directionAlgorithms
 	r       directionAlgorithms
+}
+
+func (alg *algorithms) MarshalJSON() ([]byte, error) {
+	aux := struct {
+		Kex     string              `json:"kex"`
+		HostKey string              `json:"host_key"`
+		W       directionAlgorithms `json:"client_to_server_alg_group"`
+		R       directionAlgorithms `json:"server_to_client_alg_group"`
+	}{
+		Kex:     alg.kex,
+		HostKey: alg.hostKey,
+		W:       alg.w,
+		R:       alg.r,
+	}
+
+	return json.Marshal(aux)
 }
 
 func findAgreedAlgorithms(clientKexInit, serverKexInit *kexInitMsg) (algs *algorithms, err error) {
@@ -185,6 +202,9 @@ type Config struct {
 	// The allowed MAC algorithms. If unspecified then a sensible default
 	// is used.
 	MACs []string
+
+	// A pointer to the handshake log IOT allow incremental building
+	ConnLog *HandshakeLog
 }
 
 // SetDefaults sets sensible values for unset fields in config. This is

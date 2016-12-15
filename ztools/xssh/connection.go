@@ -41,13 +41,6 @@ type ConnMetadata interface {
 
 	// LocalAddr returns the local address for this connection.
 	LocalAddr() net.Addr
-
-	// UserAuthMethodNames returns the auth methods advertised by the server in
-	// response to a "none" Authentication request
-	UserAuthMethodNames() []string
-
-	// Transport contains the server KEX information for the connection
-	Transport() *handshakeTransport
 }
 
 // Conn represents an SSH connection for both server and client roles.
@@ -104,20 +97,15 @@ func (c *connection) Close() error {
 	return c.sshConn.conn.Close()
 }
 
-func (c *connection) Transport() *handshakeTransport {
-	return c.transport
-}
-
 // sshconn provides net.Conn metadata, but disallows direct reads and
 // writes.
 type sshConn struct {
 	conn net.Conn
 
-	user                string
-	sessionID           []byte
-	clientVersion       []byte
-	serverVersion       []byte
-	userAuthMethodNames []string
+	user          string
+	sessionID     []byte
+	clientVersion []byte
+	serverVersion []byte
 }
 
 func dup(src []byte) []byte {
@@ -152,8 +140,4 @@ func (c *sshConn) ClientVersion() []byte {
 
 func (c *sshConn) ServerVersion() []byte {
 	return dup(c.serverVersion)
-}
-
-func (c *sshConn) UserAuthMethodNames() []string {
-	return c.userAuthMethodNames
 }

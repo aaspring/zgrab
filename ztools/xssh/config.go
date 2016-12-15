@@ -1,11 +1,9 @@
 package xssh
 
 func MakeXSSHConfig() *ClientConfig {
-	ret := &ClientConfig{
-		DontAuthenticate:  true, // IOT scan ethically, never attempt to authenticate
-		ClientVersion:     pkgConfig.ClientID,
-		HostKeyAlgorithms: pkgConfig.HostKeyAlgorithms.GetStringSlice(),
-	}
-
+	ret := new(ClientConfig)
+	ret.DontAuthenticate = true // IOT scan ethically, never attempt to authenticate
+	ret.ClientVersion = pkgConfig.ClientID
+	ret.HostKeyAlgorithms = pkgConfig.HostKeyAlgorithms.GetStringSlice()
 	return ret
 }

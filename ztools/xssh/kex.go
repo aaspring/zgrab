@@ -31,25 +31,25 @@ const (
 // kexResult captures the outcome of a key exchange.
 type kexResult struct {
 	// Session hash. See also RFC 4253, section 8.
-	H []byte
+	H []byte `json:"H"`
 
 	// Shared secret. See also RFC 4253, section 8.
-	K []byte
+	K []byte `json:"K"`
 
 	// Host key as hashed into H.
-	HostKey []byte
+	HostKey []byte `json:"-"`
 
 	// Signature of H.
-	Signature []byte
+	Signature []byte `json:"-"`
 
 	// A cryptographic hash function that matches the security
 	// level of the key exchange algorithm. It is used for
 	// calculating H, and for deriving keys from H and K.
-	Hash crypto.Hash
+	Hash crypto.Hash `json:"-"`
 
 	// The session ID, which is the first H computed. This is used
 	// to derive key material inside the transport.
-	SessionID []byte
+	SessionID []byte `json:"session_id"`
 }
 
 // handshakeMagics contains data that is always included in the

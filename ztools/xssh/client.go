@@ -22,50 +22,6 @@ type Client struct {
 	channelHandlers map[string]chan NewChannel
 }
 
-func (client *Client) MakeHandshakeLog(hsLog *HandshakeLog) {
-	// Fill in banner data
-	hsLog.ServerIDString = string(client.Conn.ServerVersion())
-
-	// Fill in Server Kex data
-	hsLog.ServerKex = new(KeyExchangeMsg)
-	hsLog.ServerKex.HostKeyAlgorithms = client.Transport().serverKex.ServerHostKeyAlgos
-	hsLog.ServerKex.Cookie = client.Transport().serverKex.Cookie[:]
-	hsLog.ServerKex.KexAlgorithms = client.Transport().serverKex.KexAlgos
-	hsLog.ServerKex.CiphersClientServer = client.Transport().serverKex.CiphersClientServer
-	hsLog.ServerKex.CiphersServerClient = client.Transport().serverKex.CiphersServerClient
-	hsLog.ServerKex.MACsClientServer = client.Transport().serverKex.MACsClientServer
-	hsLog.ServerKex.MACsServerClient = client.Transport().serverKex.MACsServerClient
-	hsLog.ServerKex.CompressionClientServer = client.Transport().serverKex.CompressionClientServer
-	hsLog.ServerKex.CompressionServerClient = client.Transport().serverKex.CompressionServerClient
-	hsLog.ServerKex.LanguagesClientServer = client.Transport().serverKex.LanguagesClientServer
-	hsLog.ServerKex.LanguagesServerClient = client.Transport().serverKex.LanguagesServerClient
-
-	// Fill in Algorithm Selection data
-	hsLog.AlgorithmSelection = new(AlgorithmSelection)
-	hsLog.AlgorithmSelection.KexAlgorithm = client.Transport().agreedAlgorithms.kex
-	hsLog.AlgorithmSelection.HostKeyAlgorithm = client.Transport().agreedAlgorithms.hostKey
-	hsLog.AlgorithmSelection.ClientToServerAlg.Cipher = client.Transport().agreedAlgorithms.w.Cipher
-	hsLog.AlgorithmSelection.ClientToServerAlg.MAC = client.Transport().agreedAlgorithms.w.MAC
-	hsLog.AlgorithmSelection.ClientToServerAlg.Compression = client.Transport().agreedAlgorithms.w.Compression
-	hsLog.AlgorithmSelection.ServerToClientAlg.Cipher = client.Transport().agreedAlgorithms.r.Cipher
-	hsLog.AlgorithmSelection.ServerToClientAlg.MAC = client.Transport().agreedAlgorithms.r.MAC
-	hsLog.AlgorithmSelection.ServerToClientAlg.Compression = client.Transport().agreedAlgorithms.r.Compression
-
-	// Fill in DH key exchange data
-	hsLog.ServerDHKeyExchange = client.Transport().keyExchangeGroup
-
-	// Fill in crypto data
-	hsLog.Crypto = new(Crypto)
-	hsLog.Crypto.SessionID = client.Conn.SessionID()
-	hsLog.Crypto.H = client.Transport().H
-	hsLog.Crypto.K = client.Transport().K
-
-	// Fill in userauth data
-	hsLog.UserAuth = new(UserAuthentication)
-	hsLog.UserAuth.MethodNames = client.Conn.UserAuthMethodNames()
-	return
-}
-
 // HandleChannelOpen returns a channel on which NewChannel requests
 // for the given type are sent. If the type already is being handled,
 // nil is returned. The channel is closed when the connection is closed.
@@ -138,10 +94,12 @@ func (c *connection) clientHandshake(dialAddress string, config *ClientConfig) e
 		return err
 	}
 
-	intermediateTransport := newTransport(c.sshConn.conn, config.Rand, true /* is client */)
+	config.ConnLog.ServerIDString = string(c.serverVersion)
+
 	c.transport = newClientTransport(
-		intermediateTransport,
+		newTransport(c.sshConn.conn, config.Rand, true /* is client */),
 		c.clientVersion, c.serverVersion, config, dialAddress, c.sshConn.RemoteAddr())
+
 	if err := c.transport.requestInitialKeyChange(); err != nil {
 		return err
 	}

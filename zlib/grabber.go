@@ -555,12 +555,11 @@ func makeXSSHGrabber(config *Config, grabData GrabData) func(string) error {
 	return func(netAddr string) error {
 
 		xsshConfig := xssh.MakeXSSHConfig()
-		xsshClient, err := xssh.Dial("tcp", netAddr, xsshConfig)
+		xsshConfig.ConnLog = grabData.XSSH
+		_, err := xssh.Dial("tcp", netAddr, xsshConfig)
 		if err != nil {
 			return err
 		}
-
-		xsshClient.MakeHandshakeLog(grabData.XSSH)
 
 		return nil
 	}
