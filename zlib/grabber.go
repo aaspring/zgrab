@@ -551,10 +551,11 @@ func makeGrabber(config *Config) func(*Conn) error {
 	}
 }
 
-func makeXSSHGrabber(config *Config, grabData GrabData) func(string) error {
+func makeXSSHGrabber(gblConfig *Config, grabData GrabData) func(string) error {
 	return func(netAddr string) error {
 
 		xsshConfig := xssh.MakeXSSHConfig()
+		xsshConfig.Timeout = gblConfig.Timeout
 		xsshConfig.ConnLog = grabData.XSSH
 		_, err := xssh.Dial("tcp", netAddr, xsshConfig)
 		if err != nil {
