@@ -342,7 +342,10 @@ func (t *handshakeTransport) enterKeyExchangeLocked(otherInitPacket []byte) erro
 	if err != nil {
 		return err
 	}
-	t.config.ConnLog.ClientKex = myInit
+
+	if pkgConfig.Verbose {
+		t.config.ConnLog.ClientKex = myInit
+	}
 
 	otherInit := &kexInitMsg{}
 	if err := Unmarshal(otherInitPacket, otherInit); err != nil {
@@ -399,11 +402,13 @@ func (t *handshakeTransport) enterKeyExchangeLocked(otherInitPacket []byte) erro
 	t.config.ConnLog.DHKeyExchange = kex
 
 	var result *kexResult
-	t.config.ConnLog.Crypto = result
 	if len(t.hostKeys) > 0 {
 		result, err = t.server(kex, algs, &magics)
 	} else {
 		result, err = t.client(kex, algs, &magics)
+	}
+	if pkgConfig.Verbose {
+		t.config.ConnLog.Crypto = result
 	}
 	if err != nil {
 		return err

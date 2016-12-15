@@ -13,6 +13,7 @@ type XSSHConfig struct {
 	ClientID          string
 	HostKeyAlgorithms HostKeyAlgorithmsList
 	KexAlgorithms     KexAlgorithmsList
+	Verbose           bool
 }
 
 type HostKeyAlgorithmsList struct {
@@ -103,4 +104,5 @@ func init() {
 		strings.Join(supportedKexAlgos, ","),
 	)
 	flag.Var(&pkgConfig.KexAlgorithms, "xssh-kex-algorithms", kexAlgUsage)
+	flag.BoolVar(&pkgConfig.Verbose, "xssh-verbose", false, "Output additional information.")
 }

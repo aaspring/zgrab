@@ -95,6 +95,9 @@ func (c *connection) clientHandshake(dialAddress string, config *ClientConfig) e
 	}
 
 	config.ConnLog.ServerIDString = string(c.serverVersion)
+	if pkgConfig.Verbose {
+		config.ConnLog.ClientIDString = string(c.clientVersion)
+	}
 
 	c.transport = newClientTransport(
 		newTransport(c.sshConn.conn, config.Rand, true /* is client */),
